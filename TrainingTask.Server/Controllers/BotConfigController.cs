@@ -13,7 +13,7 @@ namespace TrainingTask.Server.Controllers
         private static BotConfiguration _config = new BotConfiguration
         {
             LanguageCode = "en",
-            CredentialsJson = ""
+            JsonCreds = ""
         };
 
         [HttpGet]
@@ -26,7 +26,7 @@ namespace TrainingTask.Server.Controllers
         public IActionResult UpdateConfig([FromBody] BotConfiguration config)
         {
             _config.LanguageCode = config.LanguageCode;
-            _config.CredentialsJson = config.CredentialsJson;
+            _config.JsonCreds = config.JsonCreds;
             return Ok(_config);
         }
     }

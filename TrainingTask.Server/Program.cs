@@ -13,10 +13,36 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "TrainingTask API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 // JWT Authentication setup
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "super_secret_key_123!";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "superduper_secret_key_1234till10!";
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "TrainingTask.Server";
 
 builder.Services.AddAuthentication(options =>
@@ -37,6 +63,9 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddScoped<TrainingTask.Server.Services.IDialogflowService, TrainingTask.Server.Services.DialogflowService>();
+builder.Services.AddScoped<TrainingTask.Server.Services.ChatWebSocketHandler>();
+
 var app = builder.Build();
 
 app.UseDefaultFiles();
@@ -56,61 +85,28 @@ app.UseAuthorization();
 
 app.UseWebSockets();
 
+// Read JsonCreds from configuration and set it in ChatController's static config
+var jsonCredsElement = builder.Configuration.GetSection("JsonCreds").GetChildren();
+if (jsonCredsElement.Any())
+{
+    // Serialize the JsonCreds section to a JSON string
+    var jsonCredsDict = builder.Configuration.GetSection("JsonCreds").GetChildren().ToDictionary(x => x.Key, x => x.Value);
+    var jsonCredsString = System.Text.Json.JsonSerializer.Serialize(jsonCredsDict);
+    TrainingTask.Server.Controllers.ChatController.GetStaticConfig().JsonCreds = jsonCredsString;
+}
+// Optionally set LanguageCode from config if present
+var languageCode = builder.Configuration["LanguageCode"];
+if (!string.IsNullOrEmpty(languageCode))
+{
+    TrainingTask.Server.Controllers.ChatController.GetStaticConfig().LanguageCode = languageCode;
+}
+
 app.MapControllers();
 
 app.Map("/ws/chat", async context =>
 {
-    if (!context.WebSockets.IsWebSocketRequest)
-    {
-        context.Response.StatusCode = 400;
-        return;
-    }
-    var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-    var buffer = new byte[1024 * 4];
-    while (webSocket.State == WebSocketState.Open)
-    {
-        var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-        if (result.MessageType == WebSocketMessageType.Close)
-        {
-            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
-            break;
-        }
-        var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-        var chatRequest = JsonSerializer.Deserialize<ChatRequest>(message);
-        // Use static config for demo
-        var config = TrainingTask.Server.Controllers.ChatController.GetStaticConfig();
-        var credentialsJson = config.CredentialsJson;
-        var languageCode = config.LanguageCode;
-        var projectId = "";
-        if (!string.IsNullOrEmpty(credentialsJson))
-        {
-            using var doc = JsonDocument.Parse(credentialsJson);
-            if (doc.RootElement.TryGetProperty("project_id", out var pid))
-                projectId = pid.GetString();
-        }
-        string fulfillmentText = "", intentName = "";
-        if (!string.IsNullOrEmpty(credentialsJson) && !string.IsNullOrEmpty(projectId))
-        {
-            var builder = new SessionsClientBuilder { JsonCredentials = credentialsJson };
-            var sessionsClient = await builder.BuildAsync();
-            var sessionName = SessionName.FromProjectSession(projectId, chatRequest.SessionId);
-            var queryInput = new QueryInput
-            {
-                Text = new TextInput { Text = chatRequest.Message, LanguageCode = languageCode }
-            };
-            var detectIntentRequest = new DetectIntentRequest
-            {
-                SessionAsSessionName = sessionName,
-                QueryInput = queryInput
-            };
-            var response = await sessionsClient.DetectIntentAsync(detectIntentRequest);
-            fulfillmentText = response.QueryResult.FulfillmentText;
-            intentName = response.QueryResult.Intent.DisplayName;
-        }
-        var reply = JsonSerializer.Serialize(new { fulfillmentText, intentName });
-        var replyBytes = Encoding.UTF8.GetBytes(reply);
-        await webSocket.SendAsync(new ArraySegment<byte>(replyBytes), WebSocketMessageType.Text, true, CancellationToken.None);
-    }
+    var handler = context.RequestServices.GetRequiredService<TrainingTask.Server.Services.ChatWebSocketHandler>();
+    await handler.HandleAsync(context);
 });
 
 app.MapFallbackToFile("/index.html");

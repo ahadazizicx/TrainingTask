@@ -14,7 +14,7 @@ namespace TrainingTask.Server.Models
         public string LanguageCode { get; set; }
 
         [BsonIgnoreIfNull]
-        public string CredentialsJson { get; set; }
+        public string JsonCreds { get; set; }
 
         public string CreatedByUserId { get; set; }
         public DateTime CreatedAt { get; set; }
