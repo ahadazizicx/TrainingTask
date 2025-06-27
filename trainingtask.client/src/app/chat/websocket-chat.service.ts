@@ -9,7 +9,7 @@ export class WebsocketChatService {
   private messageSubject = new Subject<string>();
 
   connect(): void {
-    this.ws = new WebSocket(`'wss://localhost:7017/ws/chat'`); // Adjust port if needed
+    this.ws = new WebSocket('wss://localhost:7017/ws/chat'); // Adjust port if needed
 
     this.ws.onopen = () => {
       console.log('WebSocket connected');
