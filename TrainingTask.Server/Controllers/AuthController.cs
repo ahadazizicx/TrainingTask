@@ -4,6 +4,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using TrainingTask.Server.Models;
+using TrainingTask.Server.Data;
+using BCrypt.Net;
+using Microsoft.Extensions.Configuration;
 
 namespace TrainingTask.Server.Controllers
 {
@@ -13,24 +16,30 @@ namespace TrainingTask.Server.Controllers
     {
         private readonly IConfiguration _configuration;
         // For demo: hardcoded user
-        private readonly List<User> _users = new List<User> {
-            new User { Username = "testuser", Password = "password123" }
-        };
+        private readonly UserRepository _userRepository;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController(IConfiguration configuration, UserRepository userRepository, ILogger<AuthController> logger)
         {
             _configuration = configuration;
+            _userRepository = userRepository;
+            _logger = logger;
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] User login)
+        public async Task<IActionResult> Login([FromBody] LoginDTO login)
         {
-            var user = _users.FirstOrDefault(u => u.Username == login.Username && u.Password == login.Password);
-            if (user == null)
-                return Unauthorized();
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(login.Password);
+            _logger.LogInformation("Hashed password for user {Username}: {HashedPassword}", login.Username, hashedPassword);
 
+            var user = await _userRepository.GetUserAsync(login.Username, login.Password);
+            if (user == null)
+                return Unauthorized("Invalid username or password");
+
+            // Fix: Use BCrypt.Net.BCrypt.HashPassword instead of BCrypt.HashPassword
+            
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "superduper_secret_key_1234till10!");
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
@@ -38,12 +47,26 @@ namespace TrainingTask.Server.Controllers
                     new Claim(ClaimTypes.Name, user.Username)
                 }),
                 Expires = DateTime.UtcNow.AddHours(2),
-                Issuer = _configuration["Jwt:Issuer"] ?? "TrainingTask.Server",
+                Issuer = _configuration["Jwt:Issuer"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var jwt = tokenHandler.WriteToken(token);
-            return Ok(new { token = jwt });
+
+            Response.Cookies.Append("jwt", jwt, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddHours(2)
+            });
+
+            return Ok(new
+            {
+                success = true,
+                message = "Login successful",
+                // token = jwt
+            });
         }
     }
 }

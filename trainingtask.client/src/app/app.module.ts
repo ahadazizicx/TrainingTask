@@ -6,10 +6,13 @@ import { AppComponent } from './app.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { FormsModule } from '@angular/forms';
 import { ChatComponent } from './chat/chat.component';
+import { LoginComponent } from './login/login.component';
 
 @NgModule({
   declarations: [
     // ChatComponent
+  
+    LoginComponent
   ],
   imports: [
     BrowserModule, HttpClientModule, FormsModule, ChatComponent

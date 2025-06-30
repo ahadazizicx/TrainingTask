@@ -1,0 +1,34 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow">
+        <div class="card-body">
+          <h2 class="card-title text-center mb-4">Login</h2>
+          <form (ngSubmit)="login()">
+            <div class="mb-3">
+              <label for="username" class="form-label">Username</label>
+              <input type="text" id="username" name="username" class="form-control" [(ngModel)]="username" required>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" id="password" name="password" class="form-control" [(ngModel)]="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Login</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1200;">
+  <ngb-toast *ngIf="showEmptyFieldsToast" class="text-bg-warning" [autohide]="true" [delay]="2000">
+    Username and Password cannot be empty!
+  </ngb-toast>
+  <ngb-toast *ngIf="showInvalidCredsToast" class="text-bg-warning" [autohide]="true" [delay]="2000">
+    Invalid Credentials!
+  </ngb-toast>
+  <ngb-toast *ngIf="showSuccessToast" class="text-bg-success" [autohide]="true" [delay]="2000">
+    Message Sent!
+  </ngb-toast>
+</div>

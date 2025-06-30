@@ -6,11 +6,16 @@ using System.Text.Json;
 using Google.Cloud.Dialogflow.V2;
 using TrainingTask.Server.Models;
 using System.Text;
+using TrainingTask.Server.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+// builder.Services.AddMongoDb();
+builder.Services.AddSingleton<MongoDbContext>();
+builder.Services.AddScoped<UserRepository>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -66,6 +71,16 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<TrainingTask.Server.Services.IDialogflowService, TrainingTask.Server.Services.DialogflowService>();
 builder.Services.AddScoped<TrainingTask.Server.Services.ChatWebSocketHandler>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 app.UseDefaultFiles();
@@ -79,6 +94,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll"); 
 
 app.UseAuthentication();
 app.UseAuthorization();
