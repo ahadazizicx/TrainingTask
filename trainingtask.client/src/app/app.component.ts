@@ -20,7 +20,7 @@ export class AppComponent {
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(event => {
         // Add all routes where nav should be hidden
-        const hiddenRoutes = ['/login'];
+        const hiddenRoutes = ['/login', '/signup'];
         this.showNav = !hiddenRoutes.includes(event.urlAfterRedirects);
       });
   }

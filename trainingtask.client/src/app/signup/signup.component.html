@@ -3,8 +3,8 @@
     <div class="col-md-6 col-lg-4">
       <div class="card shadow">
         <div class="card-body">
-          <h2 class="card-title text-center mb-4">Login</h2>
-          <form (ngSubmit)="login()">
+          <h2 class="card-title text-center mb-4">Sign Up</h2>
+          <form (ngSubmit)="signup()">
             <div class="mb-3">
               <label for="username" class="form-label">Username</label>
               <input type="text" id="username" name="username" class="form-control" [(ngModel)]="username" required>
@@ -13,7 +13,7 @@
               <label for="password" class="form-label">Password</label>
               <input type="password" id="password" name="password" class="form-control" [(ngModel)]="password" required>
             </div>
-            <button type="submit" class="btn btn-primary w-100">Login</button>
+            <button type="submit" class="btn btn-primary w-100">Sign Up</button>
           </form>
         </div>
       </div>
@@ -29,6 +29,6 @@
     Invalid Credentials!
   </ngb-toast>
   <ngb-toast *ngIf="showSuccessToast" class="text-bg-success" [autohide]="true" [delay]="2000">
-    Login Sucessful!
+    Signup Successful!
   </ngb-toast>
 </div>

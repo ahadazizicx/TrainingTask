@@ -26,12 +26,34 @@ namespace TrainingTask.Server.Controllers
             _logger = logger;
         }
 
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] LoginDTO register)
+        {
+            if (string.IsNullOrEmpty(register.Username) || string.IsNullOrEmpty(register.Password))
+                return BadRequest("Username and password are required");
+
+            var existingUser = await _userRepository.GetUserByUsernameAsync(register.Username);
+            if (existingUser != null)
+                return Conflict("Username already exists");
+
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(register.Password);
+            var user = new User
+            {
+                Username = register.Username,
+                Password = hashedPassword
+            };
+
+            await _userRepository.CreateUserAsync(user);
+
+            _logger.LogInformation("User {Username} registered successfully", register.Username);
+            return Ok(new { success = true, message = "Registration successful" });
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO login)
         {
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(login.Password);
-            _logger.LogInformation("Hashed password for user {Username}: {HashedPassword}", login.Username, hashedPassword);
-
+           
             var user = await _userRepository.GetUserAsync(login.Username, login.Password);
             if (user == null)
                 return Unauthorized("Invalid username or password");

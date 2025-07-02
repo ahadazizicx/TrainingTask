@@ -13,7 +13,7 @@ namespace TrainingTask.Server.Services
             _logger = logger;
         }
 
-        public async Task<(string fulfillmentText, string intentName)> DetectIntentAsync(ChatRequest request, string credentialsJson, string languageCode)
+        public async Task<(string fulfillmentText, string intentName, string resultBranch)> DetectIntentAsync(ChatRequest request, string credentialsJson, string languageCode)
         {
             var projectId = "";
             if (!string.IsNullOrEmpty(credentialsJson))
@@ -24,7 +24,7 @@ namespace TrainingTask.Server.Services
             }
             if (string.IsNullOrEmpty(credentialsJson) || string.IsNullOrEmpty(projectId))
             {
-                throw new InvalidOperationException("Bot configuration is not set.");
+                throw new InvalidOperationException("Bot configuration is not set or wrong.");
             }
             var builder = new SessionsClientBuilder { JsonCredentials = credentialsJson };
             var sessionsClient = await builder.BuildAsync();
@@ -43,7 +43,34 @@ namespace TrainingTask.Server.Services
             _logger.LogInformation("Dialogflow response: {Response}", response);
             var fulfillmentText = response.QueryResult.FulfillmentText;
             var intentName = response.QueryResult.Intent.DisplayName;
-            return (fulfillmentText, intentName);
+
+            if (string.IsNullOrEmpty(fulfillmentText))
+            {
+                _logger.LogInformation("Fulfillment text is empty, checking payload for fulfillment messages.");
+                fulfillmentText = response.QueryResult.FulfillmentMessages[0]?.Payload?.ToString();
+                _logger.LogInformation("Custom Payload: {FulfillmentText}", fulfillmentText);
+            }
+            var resultBranch = GetResultBranch(intentName);
+
+            return (fulfillmentText, intentName, resultBranch);
+        }
+
+        private string GetResultBranch(string intentName)
+        {
+            return intentName switch
+            {
+                "Default Welcome Intent" => ResultBranchType.PromptAndCollectNextResponse.ToString(),
+                "Default Fallback Intent" => ResultBranchType.PromptAndCollectNextResponse.ToString(),
+                "StandardBotExchange" => ResultBranchType.PromptAndCollectNextResponse.ToString(),
+                "StandardBotMultipleMessages" => ResultBranchType.PromptAndCollectNextResponse.ToString(),
+                "StandardBotDfoMessage" => ResultBranchType.PromptAndCollectNextResponse.ToString(),
+                "StandardBotUserInputTimeout" => ResultBranchType.PromptAndCollectNextResponse.ToString(),
+                "StandardBotScriptPayload" => ResultBranchType.PromptAndCollectNextResponse.ToString(),
+                "StandardBotExchangeCustomInput" => ResultBranchType.PromptAndCollectNextResponse.ToString(),
+                "StandardBotEscalation" => ResultBranchType.ReturnControlToScript.ToString(),
+                "StandardBotEndConversation" => ResultBranchType.ReturnControlToScript.ToString(),
+                _ => "No Result Branch",
+            };
         }
     }
 }

@@ -166,6 +166,7 @@ export class ChatComponent implements OnInit {
         type: "received",
         content: jsonmsg.fulfillmentText,
         intent: jsonmsg.intentName,
+        resultbranch: jsonmsg.resultBranch,
         timestamp: new Date().toLocaleTimeString()
       });
       // Optionally, update the UI or perform other actions here

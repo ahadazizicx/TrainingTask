@@ -6,6 +6,9 @@
       </div>
       <div>
         <div class="px-4 chat-box bg-white text-center" id="messageBox" style="position: relative; height: calc(100vh - 170px); overflow: auto; display: flex; flex-direction: column-reverse;">
+          <div *ngIf="messages.length === 0" class="text-center h-100 d-flex flex-column justify-content-center align-items-center">
+            <div class="text-muted" style="">Start chatting with {{ activeBot.botName }}!</div>
+          </div>
           <div style="display: flex; flex-direction: column; width: 100%;">
             <div *ngFor="let msg of messages" class="d-flex flex-row mb-2 w-100">
               <div *ngIf="msg.type === 'sent'" class="d-flex flex-row justify-content-end sent w-100">
@@ -13,6 +16,7 @@
               </div>
               <div *ngIf="msg.type === 'received'" class="text-start received">
                 <div>{{ msg.content }} - {{ msg.intent }}</div>
+                <span>Result Branch: {{ msg.resultbranch }}</span>
               </div> 
             </div>
           </div>

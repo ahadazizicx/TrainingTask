@@ -47,8 +47,8 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // JWT Authentication setup
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "superduper_secret_key_1234till10!";
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "TrainingTask.Server";
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 
 builder.Services.AddAuthentication(options =>
 {
@@ -77,12 +77,11 @@ builder.Services.AddAuthentication(options =>
             var cookieToken = context.Request.Cookies["jwt"];
             if (!string.IsNullOrEmpty(cookieToken))
             {
-                logger?.LogInformation("JWT found in cookie. Setting context.Token.");
                 context.Token = cookieToken;
             }
             else
             {
-                logger?.LogWarning("No JWT found in cookie. Authorization header: {Header}", context.Request.Headers["Authorization"].ToString());
+                logger?.LogWarning("No JWT found in cookie.");
             }
             return Task.CompletedTask;
         },

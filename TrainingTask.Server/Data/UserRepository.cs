@@ -30,5 +30,15 @@ namespace TrainingTask.Server.Data
 
             return user;
         }
+
+        public async Task<User?> GetUserByUsernameAsync(string username)
+        {
+            return await _context.Users.Find(u => u.Username == username).FirstOrDefaultAsync();
+        }
+
+        public async Task CreateUserAsync(User user)
+        {
+            await _context.Users.InsertOneAsync(user);
+        }
     }
 }

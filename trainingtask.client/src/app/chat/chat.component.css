@@ -16,3 +16,9 @@
     /* max-width: 80%; */
     align-self: flex-start;
 }
+
+.received span {
+    font-size: 0.7em;
+    color: #646464;
+    padding-left: 10px;
+}

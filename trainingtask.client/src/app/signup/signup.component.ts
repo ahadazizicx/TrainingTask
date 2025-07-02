@@ -5,13 +5,13 @@ import { Router } from '@angular/router';
 import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css'],
+  selector: 'app-signup',
+  templateUrl: './signup.component.html',
+  styleUrls: ['./signup.component.css'],
   standalone: true,
   imports: [FormsModule, CommonModule, NgbToastModule],
 })
-export class LoginComponent {
+export class SignupComponent {
   username: string = '';
   password: string = '';
   errorMessage: string = '';
@@ -23,15 +23,15 @@ export class LoginComponent {
 
   constructor(private router: Router) {}
 
-  login() {
+  signup() {
     if (!this.username || !this.password) {
       this.errorMessage = 'Username and password are required';
       this.showToast('emptyFieldsToast');
       return;
     }
     console.log('Attempting to log in with:', this.username, this.password);
-    // Simulate a login check
-    fetch('https://localhost:7017/api/auth/login', {
+    // Simulate a signup check
+    fetch('https://localhost:7017/api/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -45,27 +45,27 @@ export class LoginComponent {
       .then((response) => {
         if (!response.ok) {
           this.showToast('invalidCredsToast');
-          throw new Error('Invalid credentials or network error');
+          throw new Error('Network response was not ok');
         }
         return response.json();
       })
       .then((data) => {
-        console.log('Login response:', data);
+        console.log('signup response:', data);
         if (data.success) {
           // Redirect to chat or dashboard
           this.showToast('successToast');
           setTimeout(() => {
-            this.router.navigate(['/config']);
+            this.router.navigate(['/']);
           }, 300);
-          console.log('Login successful');
+          console.log('signup successful');
           this.errorMessage = '';
         } else {
           this.errorMessage = 'Invalid username or password';
         }
       })
       .catch((error) => {
-        console.error('There was a problem with the login request:', error);
-        this.errorMessage = 'Login failed. Please try again later.';
+        console.error('There was a problem with the signup request:', error);
+        this.errorMessage = 'signup failed. Please try again later.';
       });
   }
 

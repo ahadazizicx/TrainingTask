@@ -38,8 +38,8 @@ namespace TrainingTask.Server.Controllers
             var languageCode = _config.LanguageCode;
             try
             {
-                var (fulfillmentText, intentName) = await _dialogflowService.DetectIntentAsync(request, credentialsJson, languageCode);
-                return Ok(new { fulfillmentText, intentName });
+                var (fulfillmentText, intentName, resultBranch) = await _dialogflowService.DetectIntentAsync(request, credentialsJson, languageCode);
+                return Ok(new { fulfillmentText, intentName, resultBranch });
             }
             catch (Exception ex)
             {

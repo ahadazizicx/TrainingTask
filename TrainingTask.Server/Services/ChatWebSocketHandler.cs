@@ -73,8 +73,6 @@ namespace TrainingTask.Server.Services
                 return;
             }
 
-            _logger.LogInformation("WebSocket connection established with Valid JWT token: {Token}", token);
-
             var webSocket = await context.WebSockets.AcceptWebSocketAsync();
             var buffer = new byte[1024 * 10];
             while (webSocket.State == WebSocketState.Open)
@@ -88,16 +86,16 @@ namespace TrainingTask.Server.Services
                 var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
                 var chatRequest = JsonSerializer.Deserialize<ChatRequest>(message, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 Console.WriteLine($"Received message: {chatRequest?.Message}");
-                Console.WriteLine($"Received JSON Credentials: {chatRequest?.JsonCreds}");
+                // Console.WriteLine($"Received JSON Credentials: {chatRequest?.JsonCreds}");
                 Console.WriteLine($"Session ID: {chatRequest?.SessionId}");
                 var credentialsJson = !string.IsNullOrEmpty(chatRequest?.JsonCreds) ? chatRequest.JsonCreds : config.JsonCreds;
                 var languageCode = config.LanguageCode;
-                string fulfillmentText = "", intentName = "";
+                string fulfillmentText = "", intentName = "", resultBranch = "";
                 if (!string.IsNullOrEmpty(chatRequest?.Message) && !string.IsNullOrEmpty(chatRequest?.SessionId))
                 {
                     try
                     {
-                        (fulfillmentText, intentName) = await _dialogflowService.DetectIntentAsync(chatRequest, credentialsJson, languageCode);
+                        (fulfillmentText, intentName, resultBranch) = await _dialogflowService.DetectIntentAsync(chatRequest, credentialsJson, languageCode);
                     }
                     catch (Exception ex)
                     {
@@ -105,7 +103,7 @@ namespace TrainingTask.Server.Services
                         intentName = "Error";
                     }
                 }
-                var reply = JsonSerializer.Serialize(new { fulfillmentText, intentName });
+                var reply = JsonSerializer.Serialize(new { fulfillmentText, intentName, resultBranch });
 
                 _logger.LogInformation("Sending reply: {Reply}", reply);
                 var replyBytes = Encoding.UTF8.GetBytes(reply);
