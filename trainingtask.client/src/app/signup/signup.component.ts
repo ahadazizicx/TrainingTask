@@ -19,6 +19,7 @@ export class SignupComponent {
   showEmptyFieldsToast = false;
   showInvalidCredsToast = false;
   showSuccessToast = false;
+  showUsernameChangeToast = false;
   toastTimeout: any;
 
   constructor(private router: Router) {}
@@ -44,8 +45,13 @@ export class SignupComponent {
     })
       .then((response) => {
         if (!response.ok) {
-          this.showToast('invalidCredsToast');
-          throw new Error('Network response was not ok');
+          if (response.status === 409) {
+            this.errorMessage = 'Username already exists';
+            this.showToast('usernameChangeToast');
+          } else {
+            this.errorMessage = 'Network error or server is down';
+          }
+          throw new Error('Username already exists or network error');
         }
         return response.json();
       })
@@ -65,7 +71,7 @@ export class SignupComponent {
       })
       .catch((error) => {
         console.error('There was a problem with the signup request:', error);
-        this.errorMessage = 'signup failed. Please try again later.';
+        this.errorMessage = 'Signup failed. Please try again later.';
       });
   }
 
@@ -84,8 +90,8 @@ export class SignupComponent {
       case 'successToast':
         this.showSuccessToast = true;
         break;
-      case 'invalidCredsToast':
-        this.showInvalidCredsToast = true;
+      case 'usernameChangeToast':
+        this.showUsernameChangeToast = true;
         break;
     }
     // Hide toast after 2 seconds

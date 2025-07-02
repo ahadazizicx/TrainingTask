@@ -101,6 +101,7 @@ namespace TrainingTask.Server.Services
                     {
                         fulfillmentText = $"Error: {ex.Message}";
                         intentName = "Error";
+                        resultBranch = "-";
                     }
                 }
                 var reply = JsonSerializer.Serialize(new { fulfillmentText, intentName, resultBranch });

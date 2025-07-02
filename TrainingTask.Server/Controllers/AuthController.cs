@@ -85,7 +85,7 @@ namespace TrainingTask.Server.Controllers
                 Expires = DateTime.UtcNow.AddHours(2)
             });
 
-            _logger.LogInformation("Set-Cookie header: {Header}", Response.Headers["Set-Cookie"].ToString());
+            _logger.LogInformation("User {Username} logged in successfully", login.Username);
 
             return Ok(new
             {
@@ -94,11 +94,12 @@ namespace TrainingTask.Server.Controllers
                 //token = jwt
             });
         }
-
+        
         [HttpPost("logout")]
         public IActionResult Logout()
         {
             Response.Cookies.Delete("jwt");
+            _logger.LogInformation("User logged out successfully");
             return Ok(new
             {
                 success = true,
