@@ -9,16 +9,13 @@ namespace TrainingTask.Server.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
 
-        public string BotName { get; set; }
-        public string ProjectId { get; set; }
-        public string LanguageCode { get; set; }
+        public string UserId { get; set; }
 
-        [BsonIgnoreIfNull]
+        public string BotName { get; set; }
+
         public string JsonCreds { get; set; }
 
-        public string CreatedByUserId { get; set; }
-        public DateTime CreatedAt { get; set; }
-
+        public string LanguageCode { get; set; }
     }
 }
 

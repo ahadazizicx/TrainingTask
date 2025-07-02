@@ -24,4 +24,19 @@ export class AppComponent {
         this.showNav = !hiddenRoutes.includes(event.urlAfterRedirects);
       });
   }
+
+  onLogout() {
+    fetch('https://localhost:7017/api/auth/logout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include' // Include cookies for session management
+    })
+    .then(response => {
+      if (response.ok) {
+        this.router.navigate(['/login']);
+      }
+    });
+  }
 }

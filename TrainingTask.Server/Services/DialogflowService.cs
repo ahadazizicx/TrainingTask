@@ -6,6 +6,13 @@ namespace TrainingTask.Server.Services
 {
     public class DialogflowService : IDialogflowService
     {
+        private readonly ILogger<DialogflowService> _logger;
+
+        public DialogflowService(ILogger<DialogflowService> logger)
+        {
+            _logger = logger;
+        }
+
         public async Task<(string fulfillmentText, string intentName)> DetectIntentAsync(ChatRequest request, string credentialsJson, string languageCode)
         {
             var projectId = "";
@@ -32,6 +39,8 @@ namespace TrainingTask.Server.Services
                 QueryInput = queryInput
             };
             var response = await sessionsClient.DetectIntentAsync(detectIntentRequest);
+
+            _logger.LogInformation("Dialogflow response: {Response}", response);
             var fulfillmentText = response.QueryResult.FulfillmentText;
             var intentName = response.QueryResult.Intent.DisplayName;
             return (fulfillmentText, intentName);

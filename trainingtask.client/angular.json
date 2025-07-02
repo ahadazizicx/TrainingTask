@@ -70,7 +70,9 @@
           "defaultConfiguration": "development",
           "options": {
             "proxyConfig": "src/proxy.conf.js",
-            "port": 58912
+            "ssl": "true",
+            "port": 4200,
+            "host": "localhost"
           }
         },
         "extract-i18n": {

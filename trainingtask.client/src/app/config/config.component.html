@@ -1,75 +1,123 @@
-<main class="content">
-    <div class="container p-0">
-      <h1 class="h3 mb-3">Add Config</h1>
-      <div class="card">
-        <div class="row g-0">
-          <div class="col-12 col-lg-5 col-xl-3 border-right">
-            <div class="px-4 d-none d-md-block">
-              <div class="d-flex align-items-center">
-                <div class="flex-grow-1 text-center">
-                  <h3>Bot Config List</h3>
-                </div>
-              </div>
+<main class="content my-5" style="z-index: 0; position: relative;">
+  <div class="container pt-5" >
+    <div class="d-flex flex-column flex-sm-row  justify-content-between align-items-center mb-3">
+      <h1 class="h3 mb-3">Bot Configurations</h1>
+      <button class="btn btn-outline-success btn-md ms-2" type="button" (click)="showCreateBotForm = true">+ Add Bot</button>
+    </div>
+    <div *ngIf="bots.length > 0 && !loader" class="card">
+      <div class="row g-0">
+        <div class="col-12">
+          <!-- Tabs for bots -->
+          <ul class="nav nav-tabs mb-3 flex-nowrap overflow-x-auto h-75" style="white-space:nowrap;">
+            <li class="nav-item" *ngFor="let bot of bots">
+              <button
+                class="nav-link btn btn-link p-0"
+                [class.active]="selectedBot?.id === bot.id"
+                (click)="selectBot(bot)"
+                type="button"
+                style="min-width:120px; text-overflow:ellipsis; overflow:hidden; max-width:180px; display:inline-block; white-space:nowrap;"
+              >
+                {{ bot.botName }}
+              </button>
+            </li>
+            <!-- <li class="nav-item ms-auto"> -->
+              
+            <!-- </li> -->
+          </ul>
+        </div>
+        <!-- Bot Details Panel -->
+        <div class="col-12 col-lg-8 col-xl-7 mx-auto">
+          <div *ngIf="selectedBot && !showCreateBotForm" class="p-3 p-md-4 border rounded bg-light">
+            <div class="mb-3">
+              <label for="Name" class="form-label">Bot Name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="Name"
+                [(ngModel)]="editedBot.botName"
+              />
             </div>
-            <a href="chat/" class="list-group-item border list-group-item-action border-0">
-              <div class="d-flex align-items-start border">
-                <div class="flex-grow-1 ml-3">Bot Config 1</div>
-              </div>
-            </a>
-            <hr class="d-block d-lg-none mt-1 mb-0" />
+            <div class="mb-3">
+              <label for="JsonServiceCredentials" class="form-label">Json Service Credentials</label>
+              <textarea
+                rows="6"
+                class="form-control"
+                id="JsonServiceCredentials"
+                [(ngModel)]="editedBot.jsonCreds"
+              ></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="Language" class="form-label">Language Code</label>
+              <input
+                type="text"
+                class="form-control"
+                id="Language"
+                [(ngModel)]="editedBot.languageCode"
+              />
+            </div>
+            <div class="d-flex flex-column flex-sm-row gap-2">
+              <button class="btn btn-primary w-100 w-sm-auto" (click)="saveBot()">Update</button>
+              <button class="btn btn-danger w-100 w-sm-auto" (click)="deleteBot()">Delete</button>
+              <button class="btn btn-secondary w-100 w-sm-auto" (click)="enterChat()">Open Chat</button>
+            </div>
           </div>
-          <div class="col-12 col-lg-7 col-xl-9">
-            <div class="position-relative">
-              <div class="chat-messages p-4">
-                <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label">App Name</label>
-                  <input
-                    type="email"
-                    class="form-control"
-                    id="exampleFormControlInput1"
-                    placeholder=""
-                  />
-                </div>
-                <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Config 1</label
-                  >
-                  <input
-                    type="email"
-                    class="form-control"
-                    id="exampleFormControlInput1"
-                    placeholder=""
-                  />
-                </div>
-                <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Config 2</label
-                  >
-                  <input
-                    type="email"
-                    class="form-control"
-                    id="exampleFormControlInput1"
-                    placeholder=""
-                  />
-                </div>
-                <div class="mb-3">
-                  <label for="exampleFormControlTextarea1" class="form-label"
-                    >Config 3</label
-                  >
-                  <textarea
-                    class="form-control"
-                    id="exampleFormControlTextarea1"
-                  ></textarea>
-                </div>
-              </div>
+          <div *ngIf="!selectedBot && !showCreateBotForm" class="p-4 text-center">
+            <em>Select a bot to view or edit its configuration.</em>
+          </div>
+          <!-- Create Bot Form Modal/Panel -->
+          <div *ngIf="showCreateBotForm" class="p-3 p-md-4 border rounded bg-light position-relative">
+            <!-- <button type="button" class="btn-close position-absolute top-0 end-0 m-2" aria-label="Close" (click)="showCreateBotForm = false"></button> -->
+            <h5>Create New Bot</h5>
+            <div class="mb-2">
+              <label class="form-label">Bot Name</label>
+              <input type="text" class="form-control" [(ngModel)]="newBot.botName" />
             </div>
-            <div class="flex-grow-0 py-3 px-4 border-top">
-              <div class="input-group">
-                <button class="btn btn-primary">Save</button>
-              </div>
+            <div class="mb-2">
+              <label class="form-label">Json Service Credentials</label>
+              <textarea class="form-control" [(ngModel)]="newBot.jsonCreds"></textarea>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Language Code</label>
+              <input type="text" class="form-control" [(ngModel)]="newBot.languageCode" />
+            </div>
+            <div class="d-flex flex-column flex-sm-row gap-2 mt-3">
+              <button class="btn btn-success w-100 w-sm-auto" (click)="createBot()">Create Bot</button>
+              <button class="btn btn-outline-secondary w-100 w-sm-auto" (click)="showCreateBotForm = false">Close</button>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </main>
+    <div *ngIf="bots.length === 0 && !loader" class="text-center p-4">
+      <p>No bots available. Please create a new bot.</p>
+      <button class="btn btn-outline-success" (click)="showCreateBotForm = true">+ Add Bot</button>
+    </div>
+    <div *ngIf="loader" class="text-center p-4">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1200;">
+  <ngb-toast *ngIf="showUpdateSuccessToast" class="text-bg-success" [autohide]="true" [delay]="2000">
+    Bot updated successfully!
+  </ngb-toast>
+  <ngb-toast *ngIf="showUpdateFailToast" class="text-bg-danger" [autohide]="true" [delay]="2000">
+    Failed to update bot!
+  </ngb-toast>
+  <ngb-toast *ngIf="showNewBotSuccessToast" class="text-bg-success" [autohide]="true" [delay]="2000">
+    New Bot Created!
+  </ngb-toast>
+  <ngb-toast *ngIf="showNewBotFailToast" class="text-bg-danger" [autohide]="true" [delay]="2000">
+    Failed to Create New Bot!
+  </ngb-toast>
+  <ngb-toast *ngIf="showDeleteSuccessToast" class="text-bg-success" [autohide]="true" [delay]="2000">
+    Bot Deleted Successfully!
+  </ngb-toast>
+  <ngb-toast *ngIf="showDeleteFailToast" class="text-bg-danger" [autohide]="true" [delay]="2000">
+    Failed to Delete Bot!
+  </ngb-toast>
+</div>

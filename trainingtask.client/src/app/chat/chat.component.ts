@@ -1,10 +1,14 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { WebsocketChatService } from './websocket-chat.service';
+import { BotConfigService } from '../config/bot-config.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { LucideAngularModule, SendHorizontal } from 'lucide-angular';
+import { v4 as uuidv4 } from 'uuid';
+import { BotConfig } from '../config/bot-config.model';
 
 @Component({
   selector: 'app-chat',
@@ -26,13 +30,64 @@ export class ChatComponent implements OnInit {
   showMessageSendFailToast = false;
   toastTimeout: any;
 
-  constructor(private wsService: WebsocketChatService) { }
+  sessionid: string = ''; 
+  botId: string | null = null;
+
+  activeBot: BotConfig = {
+    id: '',
+    botName: '',
+    jsonCreds: '',
+    languageCode: '',
+    userId: '',
+  }
+    
+  loader: boolean = false;
+
+  constructor(
+    private wsService: WebsocketChatService,
+    private botConfigService: BotConfigService,
+    private route: ActivatedRoute,
+    private router: Router
+  ) { }
 
   ngOnInit() {
+    this.botId = this.route.snapshot.paramMap.get('id');
+    if (!this.botId) {
+      console.error('No bot ID provided in route parameters');
+      this.router.navigate(['/config']);
+      return;
+    }
+
+    this.loader = true;
+    // get bot config from service
+    this.botConfigService.getBotById(this.botId).subscribe({
+      next: res => {
+        if (res.success) {
+          console.log('Bot config:', res.data);
+          this.activeBot = res.data; 
+        } else {
+          console.error('Failed to fetch bot config');
+          this.router.navigate(['/config']);
+        }
+      },
+      error: err => {
+        if (err.status === 401) {
+          this.router.navigate(['/login']);
+        } else {
+          console.error('Error fetching bot config:', err);
+          this.router.navigate(['/config']);
+        }
+      }
+    });
+    // this.BotName = 
+    this.loader = false;
+
+    // Connect to WebSocket service
     this.wsService.connect();
     this.wsService.onMessage().subscribe((msg: string) => {
       this.receiveMessage(msg);
     });
+    this.sessionid = uuidv4();
   }
 
   // Helper to show a toast by id
@@ -87,10 +142,9 @@ export class ChatComponent implements OnInit {
     // Optionally show sending toast (if you have quick reply logic, call it there)
     // this.showToast('sendQuickReplyToast');
 
-    console.log('Sending message:', this.message);
-    const SessionId = '122';
+    const SessionId = this.sessionid;  
     const Message = this.message;
-    const jsonCreds = '';
+    const jsonCreds = this.activeBot.jsonCreds;
     const sent = this.wsService.sendMessage(SessionId, Message, jsonCreds);
     if (sent) {
       this.messages.push({

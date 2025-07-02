@@ -44,7 +44,8 @@ namespace TrainingTask.Server.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.Name, user.Username)
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddHours(2),
                 Issuer = _configuration["Jwt:Issuer"],
@@ -57,15 +58,29 @@ namespace TrainingTask.Server.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                // SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None, // <-- Change this line
                 Expires = DateTime.UtcNow.AddHours(2)
             });
+
+            _logger.LogInformation("Set-Cookie header: {Header}", Response.Headers["Set-Cookie"].ToString());
 
             return Ok(new
             {
                 success = true,
                 message = "Login successful",
-                // token = jwt
+                //token = jwt
+            });
+        }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("jwt");
+            return Ok(new
+            {
+                success = true,
+                message = "Logout successful"
             });
         }
     }

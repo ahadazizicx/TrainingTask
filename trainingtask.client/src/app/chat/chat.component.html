@@ -1,38 +1,47 @@
 <div class="container mt-5 pt-4">
   <div class="d-flex row rounded-lg overflow-auto " id="translator">
-    <div class="col-12 px-0">
-      <div class="px-4 chat-box bg-white text-center" id="messageBox" style="position: relative; height: calc(100vh - 170px); overflow: auto; display: flex; flex-direction: column-reverse;">
-        <div style="display: flex; flex-direction: column; width: 100%;">
-          <div *ngFor="let msg of messages" class="d-flex flex-row mb-2 w-100">
-            <div *ngIf="msg.type === 'sent'" class="d-flex flex-row justify-content-end sent w-100">
-              <div>{{ msg.content }}</div>
+    <div *ngIf="!loader" class="col-12 px-0">
+      <div class="card-header border-0 d-flex text-center justify-content-center align-items-center">
+        <h5 class="m-0">{{ activeBot.botName }}</h5>
+      </div>
+      <div>
+        <div class="px-4 chat-box bg-white text-center" id="messageBox" style="position: relative; height: calc(100vh - 170px); overflow: auto; display: flex; flex-direction: column-reverse;">
+          <div style="display: flex; flex-direction: column; width: 100%;">
+            <div *ngFor="let msg of messages" class="d-flex flex-row mb-2 w-100">
+              <div *ngIf="msg.type === 'sent'" class="d-flex flex-row justify-content-end sent w-100">
+                <div>{{ msg.content }}</div>
+              </div>
+              <div *ngIf="msg.type === 'received'" class="text-start received">
+                <div>{{ msg.content }} - {{ msg.intent }}</div>
+              </div> 
             </div>
-            <div *ngIf="msg.type === 'received'" class="text-start received">
-              <div>{{ msg.content }} - {{ msg.intent }}</div>
-            </div> 
           </div>
         </div>
-      </div>
-      <div class="bg-light card-footer border-0  align-items-center p-3">
-        <form (ngSubmit)="send()">
-          <div class="input-group">
-            <input
-              class="form-control rounded-0 border-0 py-1 bg-light"
-              [(ngModel)]="message"
-              name="message"
-              id="inputText"
-              type="text"
-              placeholder="Enter your message..."
-              maxlength="1000"
-              autocomplete="off"
-            />
-            <button class="btn btn-link" id="sendMessage" type="submit">
-              <lucide-icon [img]="SendHorizontal" class="my-icon"></lucide-icon>
-            </button>
-          </div>
-        </form>
+        <div class="bg-light card-footer border-0 align-items-center p-3">
+          <form (ngSubmit)="send()">
+            <div class="input-group">
+              <input
+                class="form-control rounded-0 border-0 py-1 bg-light"
+                [(ngModel)]="message"
+                name="message"
+                id="inputText"
+                type="text"
+                placeholder="Enter your message..."
+                maxlength="1000"
+                autocomplete="off"
+              />
+              <button class="btn btn-link" id="sendMessage" type="submit">
+                <lucide-icon [img]="SendHorizontal" class="my-icon"></lucide-icon>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
+    <div *ngIf="loader" class="col-12 px-0 text-center">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
   </div>
 </div>
 

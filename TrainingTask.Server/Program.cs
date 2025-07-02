@@ -66,6 +66,34 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtIssuer,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     };
+
+    // Extract JWT from cookie if present, with logging
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var loggerFactory = context.HttpContext.RequestServices.GetService(typeof(ILoggerFactory)) as ILoggerFactory;
+            var logger = loggerFactory?.CreateLogger("JwtCookieAuth");
+            var cookieToken = context.Request.Cookies["jwt"];
+            if (!string.IsNullOrEmpty(cookieToken))
+            {
+                logger?.LogInformation("JWT found in cookie. Setting context.Token.");
+                context.Token = cookieToken;
+            }
+            else
+            {
+                logger?.LogWarning("No JWT found in cookie. Authorization header: {Header}", context.Request.Headers["Authorization"].ToString());
+            }
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = context =>
+        {
+            var loggerFactory = context.HttpContext.RequestServices.GetService(typeof(ILoggerFactory)) as ILoggerFactory;
+            var logger = loggerFactory?.CreateLogger("JwtCookieAuth");
+            logger?.LogError(context.Exception, "JWT authentication failed.");
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddScoped<TrainingTask.Server.Services.IDialogflowService, TrainingTask.Server.Services.DialogflowService>();
@@ -75,7 +103,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("https://localhost:4200")
+              .AllowCredentials()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });

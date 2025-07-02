@@ -16,5 +16,6 @@ namespace TrainingTask.Server.Data
         }
 
         public IMongoCollection<User> Users => _database.GetCollection<User>("users");
+        public IMongoCollection<BotConfiguration> BotConfigurations => _database.GetCollection<BotConfiguration>("botConfigurations");
     }
 }

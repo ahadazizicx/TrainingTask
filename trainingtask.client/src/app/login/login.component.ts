@@ -9,10 +9,9 @@ import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
   standalone: true,
-  imports: [FormsModule, CommonModule, NgbToastModule]
+  imports: [FormsModule, CommonModule, NgbToastModule],
 })
 export class LoginComponent {
-
   username: string = '';
   password: string = '';
   errorMessage: string = '';
@@ -22,7 +21,7 @@ export class LoginComponent {
   showSuccessToast = false;
   toastTimeout: any;
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 
   login() {
     if (!this.username || !this.password) {
@@ -35,33 +34,39 @@ export class LoginComponent {
     fetch('https://localhost:7017/api/auth/login', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username: this.username, password: this.password })
+      credentials: 'include',
+      body: JSON.stringify({
+        username: this.username,
+        password: this.password,
+      }),
     })
-    .then(response => {
-      if (!response.ok) {
-        this.showToast('invalidCredsToast');
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Login response:', data);
-      if (data.success) {
-        // Redirect to chat or dashboard
-        this.showToast('successToast');
-        this.router.navigate(['/config']);
-        console.log('Login successful');
-        this.errorMessage = '';
-      } else {
-        this.errorMessage = 'Invalid username or password';
-      }
-    })
-    .catch(error => {
-      console.error('There was a problem with the login request:', error);
-      this.errorMessage = 'Login failed. Please try again later.';
-    }); 
+      .then((response) => {
+        if (!response.ok) {
+          this.showToast('invalidCredsToast');
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log('Login response:', data);
+        if (data.success) {
+          // Redirect to chat or dashboard
+          this.showToast('successToast');
+          setTimeout(() => {
+            this.router.navigate(['/config']);
+          }, 300);
+          console.log('Login successful');
+          this.errorMessage = '';
+        } else {
+          this.errorMessage = 'Invalid username or password';
+        }
+      })
+      .catch((error) => {
+        console.error('There was a problem with the login request:', error);
+        this.errorMessage = 'Login failed. Please try again later.';
+      });
   }
 
   showToast(type: string) {
@@ -91,4 +96,3 @@ export class LoginComponent {
     }, 2000);
   }
 }
-

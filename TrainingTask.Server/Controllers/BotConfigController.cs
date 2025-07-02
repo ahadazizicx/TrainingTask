@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TrainingTask.Server.Models;
+using TrainingTask.Server.Data;
+using System.Security.Claims; // Add this namespace
+using MongoDB.Driver;
 
 namespace TrainingTask.Server.Controllers
 {
@@ -16,18 +19,115 @@ namespace TrainingTask.Server.Controllers
             JsonCreds = ""
         };
 
+        private readonly MongoDbContext _context;
+        private readonly ILogger<BotConfigController> _logger;
+
+        public BotConfigController(MongoDbContext context, ILogger<BotConfigController> logger)
+        {
+            _context = context;
+            _logger = logger;
+        }
+
+        [Authorize]
         [HttpGet]
         public IActionResult GetConfig()
         {
-            return Ok(_config);
+            // get all bots with user id
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            _logger.LogInformation("Fetching bot configurations for user: {UserId}", userId);
+            var bots = _context.BotConfigurations.Find(b => b.UserId == userId).ToList();
+            return Ok(new { success = true, data = bots });
         }
 
-        [HttpPut]
-        public IActionResult UpdateConfig([FromBody] BotConfiguration config)
+        [Authorize]
+        [HttpGet("{id}")]
+        public IActionResult GetConfigById([FromRoute] string id)
         {
-            _config.LanguageCode = config.LanguageCode;
-            _config.JsonCreds = config.JsonCreds;
-            return Ok(_config);
+            if (string.IsNullOrEmpty(id))
+            {
+                return BadRequest("Invalid configuration ID.");
+            }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var botConfig = _context.BotConfigurations.Find(b => b.Id == id && b.UserId == userId).FirstOrDefault();
+
+            if (botConfig == null)
+            {
+                return NotFound("Configuration not found.");
+            }
+            return Ok(new { success = true, data = botConfig });
+        }
+
+        [Authorize]
+        [HttpPost("create")]
+        public IActionResult CreateConfig([FromBody] BotConfigDTO config)
+        {
+            if (config == null)
+            {
+                return BadRequest("Invalid configuration data.");
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var newConfig = new BotConfiguration
+            {
+                UserId = userId,
+                BotName = config.BotName,
+                JsonCreds = config.JsonCreds,
+                LanguageCode = config.LanguageCode
+            };
+            // Here you would typically save the newConfig to your database
+            //add these in a mongo collection
+            _context.BotConfigurations.InsertOne(newConfig);
+
+            return Ok(new { success = true, data = newConfig });
+        }
+
+        [Authorize]
+        [HttpPut("{id}")]
+        public IActionResult UpdateConfig([FromRoute] string id, [FromBody] BotConfigDTO config)
+        {
+           //update the bot config
+            if (config == null || string.IsNullOrEmpty(id))
+            {
+                return BadRequest("Invalid configuration data.");
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var existingConfig = _context.BotConfigurations.Find(b => b.Id == id && b.UserId == userId).FirstOrDefault();
+
+            if (existingConfig == null)
+            {
+                return NotFound("Configuration not found.");
+            }
+
+            existingConfig.BotName = config.BotName;
+            existingConfig.JsonCreds = config.JsonCreds;
+            existingConfig.LanguageCode = config.LanguageCode;
+
+            _context.BotConfigurations.ReplaceOne(b => b.Id == id, existingConfig);
+
+            return Ok(new { success = true, data = existingConfig });
+        }
+
+        [Authorize]
+        [HttpDelete("{id}")]
+        public IActionResult DeleteConfig([FromRoute] string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return BadRequest("Invalid configuration ID.");
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = _context.BotConfigurations.DeleteOne(b => b.Id == id && b.UserId == userId);
+
+            if (result.DeletedCount == 0)
+            {
+                return NotFound("Configuration not found.");
+            }
+
+            return Ok(new { success = true, message = "Configuration deleted successfully." });
         }
     }
 }
