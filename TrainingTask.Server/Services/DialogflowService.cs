@@ -13,7 +13,7 @@ namespace TrainingTask.Server.Services
             _logger = logger;
         }
 
-        public async Task<(string fulfillmentText, string intentName, string resultBranch)> DetectIntentAsync(ChatRequest request, string credentialsJson, string languageCode)
+        public async Task<IntentDTO> DetectIntentAsync(ChatRequest request, string credentialsJson, string languageCode)
         {
             try
             {
@@ -71,7 +71,12 @@ namespace TrainingTask.Server.Services
                 }
                 var resultBranch = GetResultBranch(intentName);
 
-                return (fulfillmentText, intentName, resultBranch);
+                return new IntentDTO
+                {
+                    fulfillmentText = fulfillmentText,
+                    intentName = intentName,
+                    resultBranch = resultBranch
+                };
             }
             catch (JsonException ex)
             {

@@ -42,7 +42,6 @@ namespace TrainingTask.Server.Services
             }
 
             // Validate JWT
-            var config = Controllers.ChatController.GetStaticConfig();
             var jwtKey = _configuration["Jwt:Key"];
             var jwtIssuer = _configuration["Jwt:Issuer"];
             var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
@@ -88,39 +87,56 @@ namespace TrainingTask.Server.Services
                             await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
                             break;
                         }
-                        
+
                         var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
                         var chatRequest = JsonSerializer.Deserialize<ChatRequest>(message, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                        Console.WriteLine($"Received message: {chatRequest?.Message}");
-                        // Console.WriteLine($"Received JSON Credentials: {chatRequest?.JsonCreds}");
-                        Console.WriteLine($"Session ID: {chatRequest?.SessionId}");
-                        var credentialsJson = !string.IsNullOrEmpty(chatRequest?.JsonCreds) ? chatRequest.JsonCreds : config.JsonCreds;
-                        var languageCode = config.LanguageCode;
-                        string fulfillmentText = "", intentName = "", resultBranch = "";
+                        _logger.LogInformation("Received message: ", chatRequest?.Message);
+                        _logger.LogInformation("Received JSON Credentials: ", chatRequest?.JsonCreds);
+                        _logger.LogInformation("Session ID: ", chatRequest?.SessionId);
+                        var credentialsJson = !string.IsNullOrEmpty(chatRequest?.JsonCreds) ? chatRequest.JsonCreds : _configuration["JsonCreds"];
+                        var languageCode = "en";
+
+                        var intentresult = new IntentDTO();
+
                         if (!string.IsNullOrEmpty(chatRequest?.Message) && !string.IsNullOrEmpty(chatRequest?.SessionId))
                         {
                             try
                             {
-                                (fulfillmentText, intentName, resultBranch) = await _dialogflowService.DetectIntentAsync(chatRequest, credentialsJson, languageCode);
+                                intentresult = await _dialogflowService.DetectIntentAsync(chatRequest, credentialsJson, languageCode);
+                                var reply = JsonSerializer.Serialize(intentresult);
+                                _logger.LogInformation("Sending reply: {Reply}", reply);
+                                var replyBytes = Encoding.UTF8.GetBytes(reply);
+                                await webSocket.SendAsync(new ArraySegment<byte>(replyBytes), WebSocketMessageType.Text, true, CancellationToken.None);
                             }
                             catch (Exception ex)
                             {
-                                fulfillmentText = $"Error: {ex.Message}";
-                                intentName = "Error";
-                                resultBranch = "-";
+                                var errorResponse = new {
+                                    type = "error",
+                                    message = ex.Message,
+                                    details = ex.ToString()
+                                };
+                                var errorJson = JsonSerializer.Serialize(errorResponse);
+                                await webSocket.SendAsync(
+                                    new ArraySegment<byte>(Encoding.UTF8.GetBytes(errorJson)),
+                                    WebSocketMessageType.Text, true, CancellationToken.None
+                                );
                             }
                         }
-                        var reply = JsonSerializer.Serialize(new { fulfillmentText, intentName, resultBranch });
-
-                        _logger.LogInformation("Sending reply: {Reply}", reply);
-                        var replyBytes = Encoding.UTF8.GetBytes(reply);
-                        await webSocket.SendAsync(new ArraySegment<byte>(replyBytes), WebSocketMessageType.Text, true, CancellationToken.None);
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Error in WebSocket message loop");
-                        // Optionally send error to client or close socket
-                        break;
+                        var errorResponse = new {
+                            type = "error",
+                            message = ex.Message,
+                            details = ex.ToString()
+                        };
+                        var errorJson = JsonSerializer.Serialize(errorResponse);
+                        await webSocket.SendAsync(
+                            new ArraySegment<byte>(Encoding.UTF8.GetBytes(errorJson)),
+                            WebSocketMessageType.Text, true, CancellationToken.None
+                        );
+                        continue; // or break, depending on your logic
                     }
                 }
             }

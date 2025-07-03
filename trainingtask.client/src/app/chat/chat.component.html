@@ -125,5 +125,13 @@
     >
       Error in sending message!
     </ngb-toast>
+    <ngb-toast
+      *ngIf="showReturnErrorToast"
+      class="text-bg-warning"
+      [autohide]="true"
+      [delay]="2000"
+    >
+      {{ errorMessage }}
+    </ngb-toast>
   </div>
 </div>

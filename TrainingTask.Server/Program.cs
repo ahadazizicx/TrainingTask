@@ -130,21 +130,7 @@ app.UseAuthorization();
 
 app.UseWebSockets();
 
-// Read JsonCreds from configuration and set it in ChatController's static config
-var jsonCredsElement = builder.Configuration.GetSection("JsonCreds").GetChildren();
-if (jsonCredsElement.Any())
-{
-    // Serialize the JsonCreds section to a JSON string
-    var jsonCredsDict = builder.Configuration.GetSection("JsonCreds").GetChildren().ToDictionary(x => x.Key, x => x.Value);
-    var jsonCredsString = System.Text.Json.JsonSerializer.Serialize(jsonCredsDict);
-    TrainingTask.Server.Controllers.ChatController.GetStaticConfig().JsonCreds = jsonCredsString;
-}
-// Optionally set LanguageCode from config if present
-var languageCode = builder.Configuration["LanguageCode"];
-if (!string.IsNullOrEmpty(languageCode))
-{
-    TrainingTask.Server.Controllers.ChatController.GetStaticConfig().LanguageCode = languageCode;
-}
+
 
 app.MapControllers();
 

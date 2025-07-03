@@ -30,6 +30,7 @@ export class ChatComponent implements OnInit {
   showSendQuickReplyToast = false;
   showSuccessToast = false;
   showMessageSendFailToast = false;
+  showReturnErrorToast = false;
   toastTimeout: any;
 
   sessionid: string = ''; 
@@ -42,6 +43,7 @@ export class ChatComponent implements OnInit {
     languageCode: '',
     userId: '',
   }
+  errorMessage : string = '';
     
   loader: boolean = false;
 
@@ -126,6 +128,9 @@ export class ChatComponent implements OnInit {
       case 'messageSendFail':
         this.showMessageSendFailToast = true;
         break;
+      case 'errorReturned':
+        this.showReturnErrorToast = true;
+        break;
     }
     // Hide toast after 2 seconds
     this.toastTimeout = setTimeout(() => {
@@ -134,6 +139,8 @@ export class ChatComponent implements OnInit {
       this.showSendQuickReplyToast = false;
       this.showSuccessToast = false;
       this.showMessageSendFailToast = false;
+      this.showReturnErrorToast = false;
+      this.errorMessage = ''
     }, 2000);
   }
 
@@ -186,15 +193,20 @@ export class ChatComponent implements OnInit {
   receiveMessage(msg: any) {
     try {
       const jsonmsg = JSON.parse(msg);
-      this.messages.push({
-        type: "received",
-        content: jsonmsg.fulfillmentText,
-        intent: jsonmsg.intentName,
-        resultbranch: jsonmsg.resultBranch,
-        timestamp: new Date().toLocaleTimeString()
-      });
-      this.saveMessages();
-      console.log('Updated messages:', this.messages);
+      if (jsonmsg.type === "error") {
+        this.errorMessage = jsonmsg.message;
+        this.showToast('errorReturned');
+      } else {
+        this.messages.push({
+          type: "received",
+          content: jsonmsg.fulfillmentText,
+          intent: jsonmsg.intentName,
+          resultbranch: jsonmsg.resultBranch,
+          timestamp: new Date().toLocaleTimeString()
+        });
+        this.saveMessages();
+        console.log('Updated messages:', this.messages);
+      }
     } catch (error) {
       this.showToast('messageSendFail');
     }

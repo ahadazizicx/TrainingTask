@@ -5,6 +5,6 @@ namespace TrainingTask.Server.Services
 {
     public interface IDialogflowService
     {
-        Task<(string fulfillmentText, string intentName, string resultBranch)> DetectIntentAsync(ChatRequest request, string credentialsJson, string languageCode);
+        Task<IntentDTO> DetectIntentAsync(ChatRequest request, string credentialsJson, string languageCode);
     }
 }
