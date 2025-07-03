@@ -30,7 +30,6 @@ export class LoginComponent {
       return;
     }
     console.log('Attempting to log in with:', this.username, this.password);
-    // Simulate a login check
     fetch('https://localhost:7017/api/auth/login', {
       method: 'POST',
       headers: {
@@ -45,6 +44,7 @@ export class LoginComponent {
       .then((response) => {
         if (!response.ok) {
           this.showToast('invalidCredsToast');
+          this.errorMessage = 'Invalid username or password';
           throw new Error('Invalid credentials or network error');
         }
         return response.json();
@@ -52,7 +52,6 @@ export class LoginComponent {
       .then((data) => {
         console.log('Login response:', data);
         if (data.success) {
-          // Redirect to chat or dashboard
           this.showToast('successToast');
           setTimeout(() => {
             this.router.navigate(['/config']);
@@ -60,12 +59,15 @@ export class LoginComponent {
           console.log('Login successful');
           this.errorMessage = '';
         } else {
+          this.showToast('invalidCredsToast');
           this.errorMessage = 'Invalid username or password';
         }
       })
       .catch((error) => {
         console.error('There was a problem with the login request:', error);
-        this.errorMessage = 'Login failed. Please try again later.';
+        if (!this.errorMessage) {
+          this.errorMessage = 'Login failed. Please try again later.';
+        }
       });
   }
 

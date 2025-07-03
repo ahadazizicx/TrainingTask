@@ -7,38 +7,59 @@ namespace TrainingTask.Server.Data
 {
     public class UserRepository
     {
+        private readonly ILogger<UserRepository> _logger;
         private readonly MongoDbContext _context;
-        public UserRepository(MongoDbContext context)
+
+        public UserRepository(MongoDbContext context, ILogger<UserRepository> logger)
         {
             _context = context;
+            _logger = logger;
         }
-
-        // public async Task<User> GetUserAsync(string username, string password)
-        // {
-        //     return await _context.Users.Find(u => u.Username == username && u.Password == password).FirstOrDefaultAsync();
-        // }
 
         public async Task<User?> GetUserAsync(string username, string password)
         {
-            var user = await _context.Users.Find(u => u.Username == username).FirstOrDefaultAsync();
-            if (user == null)
-                return null;
+            try
+            {
+                var user = await _context.Users.Find(u => u.Username == username).FirstOrDefaultAsync();
+                if (user == null)
+                    return null;
 
-            // Verify password using BCrypt
-            if (!BCrypt.Net.BCrypt.Verify(password, user.Password))
-                return null;
+                if (!BCrypt.Net.BCrypt.Verify(password, user.Password))
+                    return null;
 
-            return user;
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetUserAsync for username: {Username}", username);
+                return null;
+            }
         }
 
         public async Task<User?> GetUserByUsernameAsync(string username)
         {
-            return await _context.Users.Find(u => u.Username == username).FirstOrDefaultAsync();
+            try
+            {
+                return await _context.Users.Find(u => u.Username == username).FirstOrDefaultAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetUserByUsernameAsync for username: {Username}", username);
+                return null;
+            }
         }
 
         public async Task CreateUserAsync(User user)
         {
-            await _context.Users.InsertOneAsync(user);
+            try
+            {
+                await _context.Users.InsertOneAsync(user);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in CreateUserAsync for user: {Username}", user?.Username);
+                throw;
+            }
         }
     }
 }

@@ -1,23 +1,49 @@
-<div class="container mt-5 pt-4">
-  <div class="d-flex row rounded-lg overflow-auto " id="translator">
+<div class="container mt-5 pt-3">
+  <div class="d-flex row rounded-lg overflow-auto" id="translator">
     <div *ngIf="!loader" class="col-12 px-0">
-      <div class="card-header border-0 d-flex text-center justify-content-center align-items-center">
+      <div
+        class="card-header border-0 d-flex text-center justify-content-between align-items-center"
+      >
         <h5 class="m-0">{{ activeBot.botName }}</h5>
+        <button class="btn btn-sm text-white bg-danger" (click)="deleteMessages()">
+          Clear Chat
+        </button>
       </div>
-      <div>
-        <div class="px-4 chat-box bg-white text-center" id="messageBox" style="position: relative; height: calc(100vh - 170px); overflow: auto; display: flex; flex-direction: column-reverse;">
-          <div *ngIf="messages.length === 0" class="text-center h-100 d-flex flex-column justify-content-center align-items-center">
-            <div class="text-muted">Start chatting with {{ activeBot.botName }}!</div>
+      <div class="pt-1">
+        <div
+          class="px-4 chat-box bg-white text-center"
+          id="messageBox"
+          style="
+            position: relative;
+            height: calc(100vh - 170px);
+            overflow: auto;
+            display: flex;
+            flex-direction: column-reverse;
+          "
+        >
+          <div
+            *ngIf="messages.length === 0"
+            class="text-center h-100 d-flex flex-column justify-content-center align-items-center"
+          >
+            <div class="text-muted">
+              Start chatting with {{ activeBot.botName }}!
+            </div>
           </div>
-          <div style="display: flex; flex-direction: column; width: 100%;">
-            <div *ngFor="let msg of messages" class="d-flex flex-row mb-2 w-100">
-              <div *ngIf="msg.type === 'sent'" class="d-flex flex-row justify-content-end sent w-100">
+          <div style="display: flex; flex-direction: column; width: 100%">
+            <div
+              *ngFor="let msg of messages"
+              class="d-flex flex-row mb-2 w-100"
+            >
+              <div
+                *ngIf="msg.type === 'sent'"
+                class="d-flex flex-row justify-content-end sent w-100"
+              >
                 <div>{{ msg.content }}</div>
               </div>
               <div *ngIf="msg.type === 'received'" class="text-start received">
                 <div>{{ msg.content }} - {{ msg.intent }}</div>
                 <span>Result Branch: {{ msg.resultbranch }}</span>
-              </div> 
+              </div>
             </div>
           </div>
         </div>
@@ -35,7 +61,10 @@
                 autocomplete="off"
               />
               <button class="btn btn-link" id="sendMessage" type="submit">
-                <lucide-icon [img]="SendHorizontal" class="my-icon"></lucide-icon>
+                <lucide-icon
+                  [img]="SendHorizontal"
+                  class="my-icon"
+                ></lucide-icon>
               </button>
             </div>
           </form>
@@ -46,26 +75,55 @@
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
+    </div>
   </div>
-</div>
 
-
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1200;">
-  <ngb-toast *ngIf="showNoInputToast" class="text-bg-warning" [autohide]="true" [delay]="2000">
-    Input field is empty!
-  </ngb-toast>
-  <ngb-toast *ngIf="showInvalidInputToast" class="text-bg-warning" [autohide]="true" [delay]="2000">
-    Invalid input!
-  </ngb-toast>
-  <ngb-toast *ngIf="showSendQuickReplyToast" class="text-bg-light" [autohide]="true" [delay]="2000">
-    <span class="loader text-center">
-      Sending Message<span class="loader-box"></span><span class="loader-box"></span><span class="loader-box"></span>
-    </span>
-  </ngb-toast>
-  <ngb-toast *ngIf="showSuccessToast" class="text-bg-success" [autohide]="true" [delay]="2000">
-    Message Sent!
-  </ngb-toast>
-  <ngb-toast *ngIf="showMessageSendFailToast" class="text-bg-warning" [autohide]="true" [delay]="2000">
-    Error in sending message!
-  </ngb-toast>
+  <div
+    class="toast-container position-fixed top-0 end-0 p-3"
+    style="z-index: 1200"
+  >
+    <ngb-toast
+      *ngIf="showNoInputToast"
+      class="text-bg-warning"
+      [autohide]="true"
+      [delay]="2000"
+    >
+      Input field is empty!
+    </ngb-toast>
+    <ngb-toast
+      *ngIf="showInvalidInputToast"
+      class="text-bg-warning"
+      [autohide]="true"
+      [delay]="2000"
+    >
+      Invalid input!
+    </ngb-toast>
+    <ngb-toast
+      *ngIf="showSendQuickReplyToast"
+      class="text-bg-light"
+      [autohide]="true"
+      [delay]="2000"
+    >
+      <span class="loader text-center">
+        Sending Message<span class="loader-box"></span
+        ><span class="loader-box"></span><span class="loader-box"></span>
+      </span>
+    </ngb-toast>
+    <ngb-toast
+      *ngIf="showSuccessToast"
+      class="text-bg-success"
+      [autohide]="true"
+      [delay]="2000"
+    >
+      Message Sent!
+    </ngb-toast>
+    <ngb-toast
+      *ngIf="showMessageSendFailToast"
+      class="text-bg-warning"
+      [autohide]="true"
+      [delay]="2000"
+    >
+      Error in sending message!
+    </ngb-toast>
+  </div>
 </div>

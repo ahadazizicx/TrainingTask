@@ -80,6 +80,8 @@ export class ConfigComponent implements OnInit {
       error: err => {
         if (err.status === 401) {
           this.router.navigate(['/login']);
+        } else {
+          this.ShowToast('updateFail');
         }
       }
     });
@@ -95,6 +97,8 @@ export class ConfigComponent implements OnInit {
       error: err => {
         if (err.status === 401) {
           this.router.navigate(['/login']);
+        } else {
+          this.ShowToast('deleteFail');
         }
       }
     });
@@ -113,6 +117,8 @@ export class ConfigComponent implements OnInit {
       error: err => {
         if (err.status === 401) {
           this.router.navigate(['/login']);
+        } else {
+          this.ShowToast('newBotFail');
         }
       }
     });

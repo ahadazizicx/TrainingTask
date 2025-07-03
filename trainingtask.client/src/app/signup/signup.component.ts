@@ -71,7 +71,9 @@ export class SignupComponent {
       })
       .catch((error) => {
         console.error('There was a problem with the signup request:', error);
-        this.errorMessage = 'Signup failed. Please try again later.';
+        if (!this.errorMessage) {
+          this.errorMessage = 'Signup failed. Please try again later.';
+        }
       });
   }
 

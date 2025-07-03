@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { LucideAngularModule, SendHorizontal } from 'lucide-angular';
+import { LucideAngularModule, SendHorizontal, MessageCircleX } from 'lucide-angular';
 import { v4 as uuidv4 } from 'uuid';
 import { BotConfig } from '../config/bot-config.model';
 
@@ -18,10 +18,12 @@ import { BotConfig } from '../config/bot-config.model';
   styleUrls: ['./chat.component.css']
 })
 export class ChatComponent implements OnInit {
-  // @Input() sessionId: string = 'default-session-id';
   message: string = '';
   messages: Array<any> = [];
   readonly SendHorizontal = SendHorizontal;
+  readonly MessageCircleX = MessageCircleX;
+
+  key: string = '';
 
   showNoInputToast = false;
   showInvalidInputToast = false;
@@ -64,7 +66,14 @@ export class ChatComponent implements OnInit {
       next: res => {
         if (res.success) {
           console.log('Bot config:', res.data);
-          this.activeBot = res.data; 
+          this.activeBot = res.data;
+          this.key = this.getRoomKey();
+          console.log("Key made: ", this.key);
+          const storedMessages = localStorage.getItem(this.key);
+
+          if (storedMessages) {
+            this.messages = JSON.parse(storedMessages);
+          }
         } else {
           console.error('Failed to fetch bot config');
           this.router.navigate(['/config']);
@@ -128,6 +137,11 @@ export class ChatComponent implements OnInit {
     }, 2000);
   }
 
+  getRoomKey() : string {
+    const newkey = this.activeBot.userId + '_' + this.activeBot.id;
+    return newkey;
+  }
+
   send() {
     if (!this.message.trim()) {
       this.showToast('noInputToast');
@@ -153,10 +167,20 @@ export class ChatComponent implements OnInit {
         timestamp: new Date().toLocaleTimeString()
       });
       this.message = '';
+      this.saveMessages();
       this.showToast('successToast');
     } else {
       this.showToast('messageSendFail');
     }
+  }
+
+  saveMessages() {
+    localStorage.setItem(this.key, JSON.stringify(this.messages));
+  }
+
+  deleteMessages() {
+    localStorage.removeItem(this.key)
+    this.messages = []
   }
 
   receiveMessage(msg: any) {
@@ -169,8 +193,7 @@ export class ChatComponent implements OnInit {
         resultbranch: jsonmsg.resultBranch,
         timestamp: new Date().toLocaleTimeString()
       });
-      // Optionally, update the UI or perform other actions here
-      // console.log('Received message:', msg);
+      this.saveMessages();
       console.log('Updated messages:', this.messages);
     } catch (error) {
       this.showToast('messageSendFail');
