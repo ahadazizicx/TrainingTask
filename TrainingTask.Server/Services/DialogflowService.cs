@@ -1,4 +1,5 @@
 using Google.Cloud.Dialogflow.V2;
+using Google.Protobuf.WellKnownTypes;
 using System.Text.Json;
 using TrainingTask.Server.Models;
 
@@ -31,6 +32,11 @@ namespace TrainingTask.Server.Services
                 var builder = new SessionsClientBuilder { JsonCredentials = credentialsJson };
                 var sessionsClient = await builder.BuildAsync();
                 var sessionName = SessionName.FromProjectSession(projectId, request.SessionId);
+
+                // Use the provided JSON as the custom payload
+                var customPayloadJson = @"{""echoValue"":""Passing Json to Bot method1"",""context"":{""id"":""autoContext"",""lifespan"":""1"",""parameters"":{""echoValue"":""Passing Json to Bot method2""}},""session_params"":{""echoValue"":""Passing Json to Bot method3""}}";
+                var custompayload = Google.Protobuf.WellKnownTypes.Struct.Parser.ParseJson(customPayloadJson);
+
                 var queryInput = new QueryInput
                 {
                     Text = new TextInput { Text = request.Message, LanguageCode = languageCode }
@@ -38,7 +44,30 @@ namespace TrainingTask.Server.Services
                 var detectIntentRequest = new DetectIntentRequest
                 {
                     SessionAsSessionName = sessionName,
-                    QueryInput = queryInput
+                    QueryInput = queryInput,
+                    //QueryParams = new QueryParameters
+                    //{
+                    //    Payload = custompayload
+                    //}
+                    QueryParams = new QueryParameters
+                    {
+                        Contexts =
+                        {        new Context
+                            {
+                                Name = ContextName.FromProjectSessionContext(projectId, request.SessionId, "autoContext").ToString(),
+                                LifespanCount = 1,
+                                Parameters = new Struct
+                                {
+                                    Fields =
+                                    {
+                                        ["echoValue"] = Value.ForString("Passing Json to Bot method2")
+                                    }
+                                }
+                            }
+                        },
+                        Payload = custompayload
+                    }
+
                 };
                 var response = await sessionsClient.DetectIntentAsync(detectIntentRequest);
 
@@ -93,6 +122,8 @@ namespace TrainingTask.Server.Services
                 _logger.LogError(ex, "Unexpected error in DetectIntentAsync: {Message}", ex.Message);
                 throw;
             }
+        // Ensure a return statement exists for all code paths
+        throw new InvalidOperationException("DetectIntentAsync failed to return a result.");
         }
 
         private string GetResultBranch(string intentName)

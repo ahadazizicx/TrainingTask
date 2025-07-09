@@ -155,11 +155,11 @@ export class ChatComponent implements OnInit {
       return;
     }
     // Example validation: only allow alphanumeric and spaces
-    const isValid = /^[\w\s.,!?'-]+$/.test(this.message.trim());
-    if (!isValid) {
-      this.showToast('invalidInputToast');
-      return;
-    }
+    // const isValid = /^[\w\s.,!?'-]+$/.test(this.message.trim());
+    // if (!isValid) {
+    //   this.showToast('invalidInputToast');
+    //   return;
+    // }
     // Optionally show sending toast (if you have quick reply logic, call it there)
     // this.showToast('sendQuickReplyToast');
 
