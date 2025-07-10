@@ -13,8 +13,8 @@ namespace TrainingTask.Server.Data
         {
             try
             {
-                var connectionString = configuration["MongoDB:ConnectionString"];
-                var databaseName = configuration["MongoDB:DatabaseName"];
+                var connectionString = configuration["MongoDb:ConnectionString"];
+                var databaseName = configuration["MongoDb:DatabaseName"];
                 var client = new MongoClient(connectionString);
                 _database = client.GetDatabase(databaseName);
                 _logger = logger;
