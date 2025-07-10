@@ -90,9 +90,9 @@ namespace TrainingTask.Server.Services
 
                         var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
                         var chatRequest = JsonSerializer.Deserialize<ChatRequest>(message, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                        _logger.LogInformation("Received message: ", chatRequest?.Message);
-                        _logger.LogInformation("Received JSON Credentials: ", chatRequest?.JsonCreds);
-                        _logger.LogInformation("Session ID: ", chatRequest?.SessionId);
+                        _logger.LogInformation("Received message: {Message}", chatRequest?.Message);
+                        _logger.LogInformation("Received JSON Credentials: {JsonCreds}", chatRequest?.JsonCreds);
+                        _logger.LogInformation("Session ID: {SessionId}", chatRequest?.SessionId);
                         var credentialsJson = !string.IsNullOrEmpty(chatRequest?.JsonCreds) ? chatRequest.JsonCreds : _configuration["JsonCreds"];
                         var languageCode = "en";
 
