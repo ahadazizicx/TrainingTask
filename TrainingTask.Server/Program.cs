@@ -7,6 +7,7 @@ using Google.Cloud.Dialogflow.V2;
 using TrainingTask.Server.Models;
 using System.Text;
 using TrainingTask.Server.Data;
+using TrainingTask.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -95,7 +96,8 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddScoped<TrainingTask.Server.Services.IDialogflowService, TrainingTask.Server.Services.DialogflowService>();
+// builder.Services.AddScoped<TrainingTask.Server.Services.IDialogflowService, TrainingTask.Server.Services.DialogflowService>();
+builder.Services.AddSingleton<IDialogflowService, DialogflowService>();
 builder.Services.AddScoped<TrainingTask.Server.Services.ChatWebSocketHandler>();
 
 builder.Services.AddCors(options =>
